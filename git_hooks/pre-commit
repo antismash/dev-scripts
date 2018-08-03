@@ -1,0 +1,50 @@
+#!/bin/bash
+
+echo "Checking for trailing whitespace..."
+git diff --cached --check --color | grep -v EOF | grep 'py:'
+if [ "$?" == "0" ] ; then
+  echo "Aborting commit due to trailing whitespace"
+  exit 1
+fi
+git diff --check --color | grep -v EOF | grep 'py:'
+if [ "$?" == "0" ] ; then
+  echo "Aborting commit due to trailing whitespace"
+  exit 1
+fi
+
+echo "Checking for errors with pylint..."
+for line in `git diff --cached --name-only --diff-filter=ACM | grep [.]py$`; do
+  # the grep is neccessary because files can re-enable warnings
+  pylint -E --disable=C,R,W $line | grep '^E:' | grep -v PyQuery | grep -v "'Config' has no" > /dev/null 2>&1
+  if [ "$?" == "0" ] ; then
+    echo "Aborting commit due to pylint reporting errors in file $line"
+    exit 1
+  fi
+done
+
+echo "Checking for hardcoded local paths..."
+for line in `git diff --cached --name-only --diff-filter=ACM`; do
+  grep -e "/$USER/" -e "/home/" -e "/Users/" $line > /dev/null 2>&1
+  if [ "$?" == "0" ] ; then
+    echo "Aborting commit due to hardcoded paths in file $line"
+    exit 1
+  fi
+done
+
+echo "Checking for blockers..."
+for line in `git diff --cached --name-only --diff-filter=ACM | grep [.]py$`; do
+  grep -i "do not commit" $line > /dev/null 2>&1
+  if [ "$?" == "0" ] ; then
+    echo "Aborting commit due to 'do not commit' entry in file $line"
+    exit 1
+  fi
+done
+
+echo "Running unit tests..."
+make unit > /dev/null 2>&1
+if [ "$?" != "0" ] ; then
+    echo "Aborting commit due to unit test failures."
+    exit 1
+fi
+
+exit 0

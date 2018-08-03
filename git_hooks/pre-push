@@ -1,0 +1,18 @@
+#!/bin/bash
+
+echo "Running unit tests pre-push..."
+make unit > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+    echo "Aborting push due to unit test failures."
+    exit 1
+fi
+echo "OK"
+
+echo "Running integration tests..."
+pytest --override-ini=python_files=integration_*.py
+if [ "$?" != "0" ]; then
+    echo "Aborting push due to integration test failures."
+    exit 1
+fi
+
+exit 0
