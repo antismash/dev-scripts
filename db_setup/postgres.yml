@@ -1,0 +1,39 @@
+# Save the output of this file and use kubectl create -f to import
+# it into Kubernetes.
+#
+# Created with podman-3.4.2
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2023-03-27T21:34:49Z"
+  labels:
+    app: asdb
+  name: asdb
+spec:
+  containers:
+  - args:
+    - postgres
+    image: docker.io/library/postgres:latest
+    name: postgres
+    env:
+    - name: POSTGRES_PASSWORD
+      value: "secret"
+    ports:
+    - containerPort: 5432
+      hostPort: 39023
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+    volumeMounts:
+    - mountPath: /var/lib/postgresql/data
+      name: e65c532e14079b8a1878f92af4da3bbf827d48adfedf48da3a988c2929215da2-pvc
+  restartPolicy: Never
+  volumes:
+  - name: e65c532e14079b8a1878f92af4da3bbf827d48adfedf48da3a988c2929215da2-pvc
+    persistentVolumeClaim:
+      claimName: e65c532e14079b8a1878f92af4da3bbf827d48adfedf48da3a988c2929215da2
+status: {}
