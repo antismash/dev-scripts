@@ -20,7 +20,7 @@ spec:
       value: "secret"
     ports:
     - containerPort: 5432
-      hostPort: 39023
+      hostPort: 5432
     resources: {}
     securityContext:
       capabilities:
