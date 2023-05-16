@@ -9,22 +9,25 @@ PODMAN="${PODMAN:-podman}"
 PYTHON="${PYTHON:-python3}"
 
 # Directories
-ASDB_ENV="${ASDB_ENV:-asdb_env}"
+BACKEND_ENV="${BACKEND_ENV:-asdb_backend_env}"
+FRONTEND_ENV="${FRONTEND_ENV:-asdb_frontend_env}"
 BOOTSTRAP_DIR=$(dirname -- "$(readlink -f -- "$0")")
 
 
-if [[ -z $VIRTUAL_ENV ]]; then
-    if [[ -d $ASDB_ENV ]]; then
-        echo "> > > Using existing environment $ASDB_ENV"
-        source "${ASDB_ENV}/bin/activate"
+ensure_env() {
+    env=$1
+    if [[ -d $env ]]; then
+        echo "> > > Using existing environment $env"
     else
-        echo "> > > Creating new environment $ASDB_ENV"
-        ${PYTHON} -m venv "${ASDB_ENV}"
-        source "${ASDB_ENV}/bin/activate"
+        echo "> > > Creating new environment $env"
+        ${PYTHON} -m venv "${env}"
     fi
-else
-    echo "> > > Using the currently active virtual environment $VIRTUAL_ENV"
-fi
+}
+
+ensure_env $BACKEND_ENV
+ensure_env $FRONTEND_ENV
+
+
 
 fetch_if_missing() {
     DIRNAME="$1"
@@ -41,6 +44,8 @@ fetch_if_missing import git@github.com:antismash/db-import.git
 fetch_if_missing api git@github.com:antismash/db-api.git
 fetch_if_missing ui git@github.com:antismash/db-ui-components.git
 
+source $BACKEND_ENV/bin/activate
+
 pushd antismash > /dev/null
 echo "> > > Installing antiSMASH"
 pip install -e ".[testing]"
@@ -48,6 +53,10 @@ popd > /dev/null
 
 echo "> > > Installing db-import"
 pip install -r import/requirements.txt
+
+deactivate
+
+source $FRONTEND_ENV/bin/activate
 
 pushd api > /dev/null
 echo "> > > Installing asdb API"
