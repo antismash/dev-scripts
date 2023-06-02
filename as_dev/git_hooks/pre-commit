@@ -1,26 +1,29 @@
 #!/bin/bash
 
+echo "Checking for blockers..."
+for line in `git diff --cached --name-only --diff-filter=ACM | grep [.]py$`; do
+  grep -i "do not commit" $line > /dev/null 2>&1
+  if [ "$?" == "0" ] ; then
+    echo "Aborting commit due to 'do not commit' entry in file $line"
+    exit 1
+  fi
+done
+
+echo "Checking for debug prints..."
+for line in `git diff --cached --name-only --diff-filter=ACM | grep [.]py$ | grep -vE '(test|integration)_.*\.py$'`; do
+  git diff $line | grep "^+" | grep "print(" > /dev/null 2>&1
+  if [ "$?" == "0" ] ; then
+    echo "Aborting commit due to 'print()' entry in file $line"
+    exit 1
+  fi
+done
+
 echo "Checking for trailing whitespace..."
 git diff --cached --check --color | grep -v EOF | grep 'py:'
 if [ "$?" == "0" ] ; then
   echo "Aborting commit due to trailing whitespace"
   exit 1
 fi
-git diff --check --color | grep -v EOF | grep 'py:'
-if [ "$?" == "0" ] ; then
-  echo "Aborting commit due to trailing whitespace"
-  exit 1
-fi
-
-echo "Checking for errors with pylint..."
-for line in `git diff --cached --name-only --diff-filter=ACM | grep [.]py$`; do
-  # the grep is neccessary because files can re-enable warnings
-  pylint -E --disable=C,R,W $line | grep '^E:' | grep -v PyQuery | grep -v "'Config' has no" > /dev/null 2>&1
-  if [ "$?" == "0" ] ; then
-    echo "Aborting commit due to pylint reporting errors in file $line"
-    exit 1
-  fi
-done
 
 echo "Checking for hardcoded local paths..."
 for line in `git diff --cached --name-only --diff-filter=ACM`; do
@@ -31,19 +34,30 @@ for line in `git diff --cached --name-only --diff-filter=ACM`; do
   fi
 done
 
-echo "Checking for blockers..."
-for line in `git diff --cached --name-only --diff-filter=ACM | grep [.]py$`; do
-  grep -i "do not commit" $line > /dev/null 2>&1
-  if [ "$?" == "0" ] ; then
-    echo "Aborting commit due to 'do not commit' entry in file $line"
+echo "Checking for errors with pylint..."
+PYLINT_OPTS="--reports=n --score=n --disable=all --enable=E --fail-on=unused-variable,comparison-with-itself"
+files="$(git diff --cached --name-only --diff-filter=ACM | grep [.]py$)"
+if [ ! -z "$files" ] ; then
+  # the grep is necessary because files can re-enable warnings
+  errors="$(pylint $PYLINT_OPTS $files | grep -v "'Config' has no")"
+  if [ ! -z "$errors" ] ; then
+    echo "Aborting commit due to pylint reporting errors"
+    echo "$errors"
     exit 1
   fi
-done
+fi
+
+echo "Checking for errors with mypy..."
+mypy run_antismash.py antismash
+if [ "$?" == "1" ] ; then
+  echo "Aborting commit due to mypy reporting errors"
+  exit 1
+fi
 
 echo "Running unit tests..."
-make unit > /dev/null 2>&1
+make > /dev/null 2>&1
 if [ "$?" != "0" ] ; then
-    echo "Aborting commit due to unit test failures."
+    echo "Aborting commit due to unit test failures"
     exit 1
 fi
 
