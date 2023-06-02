@@ -6,6 +6,8 @@ PYTHON=python3
 AS_ENV="${AS_ENV:-env}"
 AS_DATA="${AS_DATA:-$AS_ENV/antismash/databases}"
 
+SCRIPT_DIR=$(dirname $0)
+
 ensure_env() {
     env=$1
     if [[ -d $env ]]; then
@@ -18,7 +20,7 @@ ensure_env() {
 
 # glimmerhmm is the most awkward dependency, so if it's present, then assume
 # the rest are present
-which glimmerhmm || sudo `dirname $0`/install_binary_dependencies.sh
+which glimmerhmm || sudo $SCRIPT_DIR/install_binary_dependencies.sh
 
 # build the environment if not already in one
 if [[ -z $VIRTUAL_ENV ]]; then
@@ -28,6 +30,9 @@ fi
 
 # grab the source
 git clone https://github.com/antismash/antismash.git src
+
+# copy the git hooks into the source
+cp $SCRIPT_DIR/git_hooks/* src/.git/hooks/.
 
 # install the source
 pushd src
@@ -41,4 +46,3 @@ antismash --write-config-file src/antismash/config/instance.cfg --data $AS_DATA
 
 # ensure everything is fine
 antismash --check-prereqs
-
