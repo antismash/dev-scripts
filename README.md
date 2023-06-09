@@ -2,6 +2,13 @@
 
 These scripts can help with setting up and running antiSMASH development.
 
+## `as_dev`
+
+Contains install scripts for antiSMASH binary dependencies (`install_binary_dependencies.sh`),
+a full development environment (`setup_antismash_dev.sh`)
+and git pre-commit and pre-push hooks you can place into your `.git/hooks` directory
+(automatically included by the development environment script).
+
 ## `db_setup`
 
 The `bootstrap.sh` script can boostrap your development environment. It will need `git`, `podman`,
@@ -9,10 +16,6 @@ and of course `python3` installed. You can either use a preexisting python virtu
 install the dependencies, or the boostrap script will create one for you.
 
 Some settings can be influenced by environment variables, check the script for details.
-
-## `git_hooks`
-
-Contains useful git pre-commit and pre-push hooks you can place into your `.git/hooks` directory.
 
 ## LICENCE
 
