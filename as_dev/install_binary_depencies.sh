@@ -19,6 +19,7 @@ apt-get install -y \
     glimmerhmm \
     hmmer \
     hmmer2 \
+    make \
     meme-suite \
     ncbi-blast+ \
     openmpi-bin \
