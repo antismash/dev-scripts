@@ -11,7 +11,7 @@ done
 
 echo "Checking for debug prints..."
 for line in `git diff --cached --name-only --diff-filter=ACM | grep [.]py$ | grep -vE '(test|integration)_.*\.py$'`; do
-  git diff $line | grep "^+" | grep "print(" > /dev/null 2>&1
+  git diff --cached $line | grep "^+" | grep "print(" > /dev/null 2>&1
   if [ "$?" == "0" ] ; then
     echo "Aborting commit due to 'print()' entry in file $line"
     exit 1
