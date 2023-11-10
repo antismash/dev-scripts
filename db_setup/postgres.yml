@@ -13,7 +13,7 @@ spec:
   containers:
   - args:
     - postgres
-    image: docker.io/library/postgres:9
+    image: docker.io/library/postgres:13
     name: postgres
     env:
     - name: POSTGRES_PASSWORD
